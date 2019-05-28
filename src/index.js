@@ -17,8 +17,23 @@ app.get('/', (req, res) => {
 	res.send('index.html');
 });
 
-io.on('connection', () => {
+let count = 0;
+io.on('connection', (socket) => {
 	console.log('new connection with socket io');
+
+	socket.emit('msg', 'welcome and hello');
+	socket.broadcast.emit('msg', 'new user loged in');
+	socket.on('sendMsg', (msg) => {
+		io.emit('msg', msg);
+	});
+
+	socket.on('location', (location) => {
+		io.emit('msg', `https://www.google.com/maps?q=${location.latitude},${location.longitude}`);
+	});
+
+	socket.on('disconnect', () => {
+		io.emit('msg', 'a user has disconnected');
+	});
 });
 
 server.listen(port, () => {
