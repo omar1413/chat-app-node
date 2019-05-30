@@ -2,22 +2,34 @@ const socket = io();
 
 //Elements
 const $messageForm = document.querySelector('#message-form');
-const $messageFormButton = $messageForm.querySelector('#send-button');
+const $messageFormButton = $messageForm.querySelector('button');
 const $messageFormInput = $messageForm.querySelector('input');
 const $messages = document.querySelector('#messages');
-const $locationButton = document.querySelector('#location-button');
+const $locationButton = document.querySelector('#send-location');
 
 //Templates
 const $messageTemplate = document.querySelector('#message-template').innerHTML;
-const $locationTemplate = document.querySelector('#location-template').innerHTML;
+const $locationTemplate = document.querySelector('#location-message-template').innerHTML;
+
+//Options
+
+const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true });
+
+socket.emit('join', { username, room });
 
 socket.on('msg', (message) => {
-	const html = Mustache.render($messageTemplate, { message });
+	const html = Mustache.render($messageTemplate, {
+		message   : message.text,
+		createdAt : moment(message.createdAt).format('h:mm a')
+	});
 	$messages.insertAdjacentHTML('beforeend', html);
 });
 
 socket.on('locationMsg', (location) => {
-	const html = Mustache.render($locationTemplate, { location });
+	const html = Mustache.render($locationTemplate, {
+		url       : location.url,
+		createdAt : moment(location.createdAt).format('h:mm a')
+	});
 	$messages.insertAdjacentHTML('beforeend', html);
 });
 
@@ -49,8 +61,8 @@ $locationButton.addEventListener('click', () => {
 			socket.emit(
 				'location',
 				{
-					latitude: pos.coords.latitude,
-					longitude: pos.coords.longitude
+					latitude  : pos.coords.latitude,
+					longitude : pos.coords.longitude
 				},
 				() => {
 					$locationButton.removeAttribute('disabled');
